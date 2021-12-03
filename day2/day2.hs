@@ -15,25 +15,23 @@ main = do
     print result2
     print $ (sel1 result2) * (sel2 result2)
 
-navigate :: [(String, Int)] -> (Int, Int) -> (Int, Int)
+navigate :: [(Movement, Int)] -> (Int, Int) -> (Int, Int)
 navigate [] (p, d) = (p, d)
-navigate (("forward", n) : ds) (p, d) = navigate ds (p + n, d)
-navigate (("down", n) : ds) (p, d) = navigate ds (p, d + n)
-navigate (("up", n) : ds) (p, d) = navigate ds (p, d - n)
-navigate _ _ = (0,0)
+navigate ((Forward, n) : ds) (p, d) = navigate ds (p + n, d)
+navigate ((Down, n) : ds) (p, d) = navigate ds (p, d + n)
+navigate ((Up, n) : ds) (p, d) = navigate ds (p, d - n)
 
-navigate2 :: [(String, Int)] -> (Int, Int, Int) -> (Int, Int, Int)
+navigate2 :: [(Movement, Int)] -> (Int, Int, Int) -> (Int, Int, Int)
 navigate2 [] (p, d, a) = (p, d, a)
-navigate2 (("forward", n) : ds) (p, d, a) = navigate2 ds (p + n, d + a * n, a)
-navigate2 (("down", n) : ds) (p, d, a) = navigate2 ds (p, d, a + n)
-navigate2 (("up", n) : ds) (p, d, a) = navigate2 ds (p, d, a - n)
-navigate2 _ _ = (0,0,0)
+navigate2 ((Forward, n) : ds) (p, d, a) = navigate2 ds (p + n, d + a * n, a)
+navigate2 ((Down, n) : ds) (p, d, a) = navigate2 ds (p, d, a + n)
+navigate2 ((Up, n) : ds) (p, d, a) = navigate2 ds (p, d, a - n)
 
 getLines :: String -> IO [String]
 getLines path = lines <$> readFile path
 
-processLine :: String -> (String, Int)
-processLine line = (head values, read $ last values)
+processLine :: String -> (Movement, Int)
+processLine line = (parseMovement $ head values, read $ last values)
     where
         values = splitOn " " line
 
