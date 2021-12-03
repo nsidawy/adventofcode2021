@@ -1,6 +1,5 @@
 import System.IO  
 import Control.Monad
-import Data.List.Split
 import Data.Tuple.Select
 
 data Movement = Up | Forward | Down
@@ -8,12 +7,10 @@ data Movement = Up | Forward | Down
 main = do  
     lines <- getLines "input.txt"
     let directions = map processLine lines
-    let result = navigate directions (0, 0)
-    let result2 = navigate2 directions (0, 0, 0)
-    print result
-    print $ (fst result) * (snd result)
-    print result2
-    print $ (sel1 result2) * (sel2 result2)
+    let (p, d) = navigate directions (0, 0)
+    let (p2, d2, _) = navigate2 directions (0, 0, 0)
+    print $ p * d
+    print $ p2 * d2
 
 navigate :: [(Movement, Int)] -> (Int, Int) -> (Int, Int)
 navigate [] (p, d) = (p, d)
@@ -33,7 +30,7 @@ getLines path = lines <$> readFile path
 processLine :: String -> (Movement, Int)
 processLine line = (parseMovement $ head values, read $ last values)
     where
-        values = splitOn " " line
+        values = words line
 
 parseMovement :: String -> Movement
 parseMovement s = case s of 
