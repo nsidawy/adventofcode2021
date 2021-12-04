@@ -1,19 +1,17 @@
 {-# LANGUAGE ParallelListComp #-}
 
 import Control.Monad
-import Data.Bits
-import Data.Map (Map)
-import qualified Data.Map as Map
+import Text.Printf
 
 main = do  
     lines <- getLines "input.txt"
     let counts = replicate (length $ head lines) 0
     let gammaBinary = getGammaBinary lines counts
     let epsilonBinary = getEpsilonBinary gammaBinary
-    printf "part 1: %d" $ (binaryToInt gammaBinary) * (binaryToInt epsilonBinary) 
+    printf "part 1: %d\n" $ (binaryToInt gammaBinary) * (binaryToInt epsilonBinary) 
     let oxygenBinary = getOxygenBinary lines 0
     let co2Binary = getCo2Binary lines 0
-    print $ (binaryToInt $ co2Binary) * (binaryToInt $ oxygenBinary)
+    printf "part 2: %d\n" $ (binaryToInt $ co2Binary) * (binaryToInt $ oxygenBinary)
 
 getOxygenBinary :: [String] -> Int -> [Int]
 getOxygenBinary [s] _ = [read [c] | c <- s]
