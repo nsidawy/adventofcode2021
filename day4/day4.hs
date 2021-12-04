@@ -57,14 +57,15 @@ scoreBoard ns (i, board) = (ns !! (i-1)) * (sum [v | v <- flattened, not $ v `el
 checkBoard :: [Int] -> Board -> Bool
 checkBoard ns board = validRows || validCols
     where 
+        checkRow :: [Int] -> Row -> Bool 
+        checkRow ns row = V.all (\v -> elem v ns) row
+        
+        checkColumn :: [Int] -> Board -> Int -> Bool
+        checkColumn ns board i = all (\v -> elem v ns) (V.map (\r -> r V.! i) board)
+
         validRows :: Bool
         validRows = V.any (\r -> checkRow ns r) board
 
         validCols :: Bool
         validCols = any (\i -> checkColumn ns board i) [0..4]
 
-checkRow :: [Int] -> Row -> Bool 
-checkRow ns row = V.all (\v -> elem v ns) row
-
-checkColumn :: [Int] -> Board -> Int -> Bool
-checkColumn ns board i = all (\v -> elem v ns) (V.map (\r -> r V.! i) board)
