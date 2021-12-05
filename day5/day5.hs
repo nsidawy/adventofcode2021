@@ -39,5 +39,5 @@ isStraight ((x1, y1), (x2, y2)) = x1 == x2 || y1 == y2
 getData :: String -> IO [Coord]
 getData path = do
     lines <- lines <$> readFile path
-    let coordsStr = map (map (map read . splitOn "," ) . splitOn " -> ") lines
+    let coordsStr = map (map (map read . splitOn ",") . splitOn " -> ") lines
     return [((head $ head c, last $ head c), (head $ last c, last $ last c)) | c <- coordsStr]
