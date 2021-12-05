@@ -1,5 +1,3 @@
-{-# LANGUAGE ParallelListComp #-}
-
 import Control.Monad
 import Text.Printf
 import Data.List.Split
@@ -11,7 +9,7 @@ type Row = V.Vector Int
 
 main = do  
     (numbers, boards) <- getData "input.txt"
-    let winningTurns = sortOn (\v -> snd v) [(b, getWinningTurn numbers 1 b) | b <- boards]
+    let winningTurns = sortOn snd [(b, getWinningTurn numbers 1 b) | b <- boards]
     let (firstBoard, firstTurn) = head winningTurns
     let (lastBoard, lastTurn) = last winningTurns
     printf "Part 1: %d\n" $ scoreBoard (firstTurn `take` numbers) firstBoard
@@ -21,15 +19,17 @@ getData :: String -> IO ([Int], [Board])
 getData path = do
     lines <- lines <$> readFile path
     let numbers = map read $ splitOn "," $ head lines
-    let boards = getBoards (tail lines) []
+    let boards = getBoards $ tail lines
     return (numbers, boards)
 
 getWinningTurn :: [Int] -> Int -> Board -> Int
-getWinningTurn ns i board = if checkBoard (take i ns) board then i else getWinningTurn ns (i+1) board
+getWinningTurn ns i board
+    | checkBoard (take i ns) board = i
+    | otherwise = getWinningTurn ns (i+1) board
 
-getBoards :: [String] -> [Board] -> [Board]
-getBoards [] v = v
-getBoards ls v = getBoards (drop 6 ls) (newBoard : v)
+getBoards :: [String] -> [Board]
+getBoards [] = []
+getBoards ls = newBoard : (getBoards $ drop 6 ls)
     where 
         boardLines :: [String]
         boardLines = take 5 $ tail ls 
