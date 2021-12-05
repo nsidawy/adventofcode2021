@@ -22,11 +22,6 @@ getData path = do
     let boards = getBoards $ tail lines
     return (numbers, boards)
 
-getWinningTurn :: [Int] -> Int -> Board -> Int
-getWinningTurn ns i board
-    | checkBoard (take i ns) board = i
-    | otherwise = getWinningTurn ns (i+1) board
-
 getBoards :: [String] -> [Board]
 getBoards [] = []
 getBoards ls = newBoard : (getBoards $ drop 6 ls)
@@ -36,6 +31,11 @@ getBoards ls = newBoard : (getBoards $ drop 6 ls)
 
         newBoard :: Board
         newBoard = V.fromList [V.fromList ((map read $ words bl) :: [Int]) | bl <- boardLines] 
+
+getWinningTurn :: [Int] -> Int -> Board -> Int
+getWinningTurn ns i board
+    | checkBoard (take i ns) board = i
+    | otherwise = getWinningTurn ns (i+1) board
 
 scoreBoard :: [Int] -> Board -> Int
 scoreBoard ns board = (last ns) * (sum [v | v <- flattened, not $ v `elem` ns])
