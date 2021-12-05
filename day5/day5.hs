@@ -8,7 +8,7 @@ type Point = (Int,Int)
 type Coord = (Point,Point)
 
 main = do  
-    coords <- getData "input.txt"
+    coords <- getData "ex.txt"
     let straightCoords = filter isStraight coords
     let maxX = maximum $ concatMap (\i -> [fst $ fst i, fst $ snd i]) coords
     let maxY = maximum $ concatMap (\i -> [snd $ fst i, snd $ snd i]) coords
@@ -22,37 +22,42 @@ countIntersects :: [Coord] -> Point -> Int
 countIntersects cs p = length (filter (intersects p) cs)
 
 intersects :: Point -> Coord -> Bool
-intersects p c = straightIntersects p c && (isStraight c || diffX == diffY)
+intersects p c = bounded p c && (isStraight c || diffX == diffY)
     where
         diffX :: Int
-        diffX = abs $ fst p - firstX c
+        diffX = abs $ fst p - fst (fst c)
         diffY :: Int
-        diffY = abs $ snd p - firstY c
+        diffY = abs $ snd p - snd (fst c)
 
-straightIntersects :: Point -> Coord -> Bool
-straightIntersects p c = ((fst p >= firstX c && fst p <= sndX c) || (fst p >= sndX c && fst p <= firstX c))
-        && ((snd p >= firstY c && snd p <= sndY c) || (snd p >= sndY c && snd p <= firstY c))
-
-diagonalIntersects :: Point -> Coord -> Bool
-diagonalIntersects p c = False
+bounded :: Point -> Coord -> Bool
+bounded p c = (fst p >= minX c && fst p <= maxX c)
+        && (snd p >= minY c && snd p <= maxY c)
 
 getPoints :: Coord -> [Point]
 getPoints c = []
         
 isStraight :: Coord -> Bool
-isStraight c = firstX c == sndX c || firstY c == sndY c
+isStraight c = fst (fst c) == fst (snd c) || snd (fst c) == snd (snd c)
 
-firstX :: Coord -> Int
-firstX c = fst $ fst c
+minX :: Coord -> Int
+minX c 
+    | fst (fst c) < fst (snd c) = fst $ fst c
+    | otherwise = fst $ snd c
 
-sndX :: Coord -> Int
-sndX c = fst $ snd c
+maxX :: Coord -> Int
+maxX c 
+    | fst (fst c) < fst (snd c) = fst $ snd c
+    | otherwise = fst $ fst c
 
-firstY :: Coord -> Int
-firstY c = snd $ fst c
+minY :: Coord -> Int
+minY c 
+    | snd (fst c) < snd (snd c) = snd $ fst c
+    | otherwise = snd $ snd c
 
-sndY :: Coord -> Int
-sndY c = snd $ snd c
+maxY :: Coord -> Int
+maxY c 
+    | snd (fst c) < snd (snd c) = snd $ snd c
+    | otherwise = snd $ fst c
 
 getData :: String -> IO [Coord]
 getData path = do
