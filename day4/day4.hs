@@ -24,7 +24,7 @@ getData path = do
 
 getBoards :: [String] -> [Board]
 getBoards [] = []
-getBoards ls = newBoard : (getBoards $ drop 6 ls)
+getBoards ls = newBoard : getBoards ( drop 6 ls)
     where 
         boardLines :: [String]
         boardLines = take 5 $ tail ls 
@@ -38,7 +38,7 @@ getWinningTurn ns i board
     | otherwise = getWinningTurn ns (i+1) board
 
 scoreBoard :: [Int] -> Board -> Int
-scoreBoard ns board = (last ns) * (sum [v | v <- flattened, not $ v `elem` ns])
+scoreBoard ns board = last ns * sum [v | v <- flattened, v `notElem` ns]
     where
         flattened :: [Int]
         flattened = V.toList $ V.concat $ V.toList board
@@ -47,14 +47,14 @@ checkBoard :: [Int] -> Board -> Bool
 checkBoard ns board = validRows || validCols
     where 
         checkRow :: [Int] -> Row -> Bool 
-        checkRow ns row = V.all (\v -> elem v ns) row
+        checkRow ns row = V.all (`elem` ns) row
         
         checkColumn :: [Int] -> Board -> Int -> Bool
-        checkColumn ns board i = all (\v -> elem v ns) (V.map (\r -> r V.! i) board)
+        checkColumn ns board i = all (`elem` ns) (V.map (V.! i) board)
 
         validRows :: Bool
-        validRows = V.any (\r -> checkRow ns r) board
+        validRows = V.any (checkRow ns) board
 
         validCols :: Bool
-        validCols = any (\i -> checkColumn ns board i) [0..4]
+        validCols = any (checkColumn ns board) [0..4]
 

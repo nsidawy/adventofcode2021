@@ -8,10 +8,10 @@ main = do
     let counts = replicate (length $ head lines) 0
     let gammaBinary = getGammaBinary lines counts
     let epsilonBinary = getEpsilonBinary gammaBinary
-    printf "part 1: %d\n" $ (binaryToInt gammaBinary) * (binaryToInt epsilonBinary) 
+    printf "part 1: %d\n" $ binaryToInt gammaBinary * binaryToInt epsilonBinary
     let oxygenBinary = getOxygenBinary lines 0
     let co2Binary = getCo2Binary lines 0
-    printf "part 2: %d\n" $ (binaryToInt $ co2Binary) * (binaryToInt $ oxygenBinary)
+    printf "part 2: %d\n" $ binaryToInt co2Binary * binaryToInt oxygenBinary
 
 getOxygenBinary :: [String] -> Int -> [Int]
 getOxygenBinary [s] _ = [read [c] | c <- s]
@@ -21,7 +21,7 @@ getOxygenBinary ls i = getOxygenBinary (filter f ls) (i+1)
         g = getGammaBinary ls (replicate (length $ head ls) 0)
     
         f :: String -> Bool
-        f l = read [(l !! i)] == g !! i
+        f l = read [l !! i] == g !! i
 
 getCo2Binary :: [String] -> Int -> [Int]
 getCo2Binary [s] _ = [read [c] | c <- s]
@@ -31,7 +31,7 @@ getCo2Binary ls i = getCo2Binary (filter f ls) (i+1)
         e = getEpsilonBinary $ getGammaBinary ls (replicate (length $ head ls) 0)
     
         f :: String -> Bool
-        f l = read [(l !! i)] == e !! i
+        f l = read [l !! i] == e !! i
 
 getEpsilonBinary :: [Int] -> [Int]
 getEpsilonBinary gammaBinary = [if b == 0 then 1 else 0 | b <- gammaBinary]
@@ -41,13 +41,12 @@ getGammaBinary [] counts = [if c < 0 then 0 else 1 | c <- counts]
 getGammaBinary (l:ls) counts = getGammaBinary ls newCounts
     where
         changes :: [Int]
-        changes = getChanges l []
+        changes = getChanges l
         newCounts :: [Int]
         newCounts = applyChanges counts changes
 
-getChanges :: [Char] -> [Int] -> [Int]
-getChanges [] i = i
-getChanges (c:cs) i = getChanges cs $ i ++ [if c == '0' then -1 else 1]
+getChanges :: [Char] -> [Int]
+getChanges cs = foldl (\ i c -> i ++ [if c == '0' then -1 else 1]) [] cs
 
 applyChanges :: [Int] -> [Int] -> [Int]
 applyChanges counts changes = [i + c | i <- counts | c <- changes]
@@ -59,4 +58,4 @@ binaryToInt :: [Int] -> Int
 binaryToInt bs = sum [b * 2^i | (b, i) <- zip bs indices]
     where 
         indices :: [Int]
-        indices = reverse [0..(length bs) - 1]
+        indices = reverse [0..length bs - 1]
