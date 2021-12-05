@@ -8,7 +8,7 @@ type Point = (Int,Int)
 type Coord = (Point,Point)
 
 main = do  
-    coords <- getData "ex.txt"
+    coords <- getData "input.txt"
     let straightCoords = filter isStraight coords
     let maxX = maximum $ concatMap (\i -> [fst $ fst i, fst $ snd i]) coords
     let maxY = maximum $ concatMap (\i -> [snd $ fst i, snd $ snd i]) coords
@@ -32,9 +32,6 @@ intersects p c = bounded p c && (isStraight c || diffX == diffY)
 bounded :: Point -> Coord -> Bool
 bounded p c = (fst p >= minX c && fst p <= maxX c)
         && (snd p >= minY c && snd p <= maxY c)
-
-getPoints :: Coord -> [Point]
-getPoints c = []
         
 isStraight :: Coord -> Bool
 isStraight c = fst (fst c) == fst (snd c) || snd (fst c) == snd (snd c)
