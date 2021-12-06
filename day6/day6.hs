@@ -1,36 +1,49 @@
-import Control.Monad
-import Text.Printf
-import Data.List.Split
-import qualified Data.Map as M
+import           Control.Monad
+import           Data.List.Split
+import qualified Data.Vector     as V
+import           Text.Printf
 
-type Point = (Int,Int)
-type Coord = (Point,Point)
+main = do
+    inputTimers <- getData "input.txt"
+    let days = 256
+    let daysHalf = days `div` 2
+    --Run calculation for a single zero fish.
+    let dailyTimers = run daysHalf [[0]]
+    let dailyCounts = [length x | x <- dailyTimers]
+    let countByAge = [sum $ [dailyCounts !! (daysHalf - t2) | t2 <- dailyTimers !! (daysHalf - t)] | t <- [0..8]]
+    let result = sum [countByAge !! i | i <- inputTimers]
+    print result
 
-main = do  
-    timers <- getData "input.txt"
-    let days = 256 
-    end <- run days timers
-    print $ length end
+    let fishes = V.fromList [length $ filter (== i) inputTimers | i <- [0..8]]
+    print $ V.sum $ runAgg days fishes
 
-run :: Int -> [Int] -> IO [Int]
-run 0 timers = do return timers
-run i timers = do
-    print i
-    run (i-1) (concatMap step timers)
+--Run steps keeping track of fish at each day
+run :: Int -> [[Int]] -> [[Int]]
+run 0 timers = timers
+run i timers = run (i-1) (timers ++ [next])
+    where
+        next = concatMap step (last timers)
 
 step :: Int -> [Int]
 step 0 = [6, 8]
 step i = [i-1]
+
+runAgg :: Int -> V.Vector Int -> V.Vector Int
+runAgg 0 timers = timers
+runAgg i timers = runAgg (i-1) $ V.fromList [
+        timers V.! 1
+        , timers V.! 2
+        , timers V.! 3
+        , timers V.! 4
+        , timers V.! 5
+        , timers V.! 6
+        , timers V.! 7 + timers V.! 0
+        , timers V.! 8
+        , timers V.! 0
+    ]
 
 getData :: String -> IO [Int]
 getData path = do
     lines <- lines <$> readFile path
     let timers = map read $ splitOn "," $ head lines
     return timers
-
-parseLine :: String -> Coord
-parseLine s = ((x1,y1),(x2,y2))
-    where 
-        [one, two] = splitOn " -> " s
-        [x1, y1] = map read $ splitOn "," one
-        [x2, y2] = map read $ splitOn "," two
