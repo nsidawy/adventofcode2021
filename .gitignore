@@ -23,3 +23,6 @@ cabal.project.local~
 .ghc.environment.*
 
 *swp
+
+day[0-9]
+day[0-9][0-9]
