@@ -18,21 +18,20 @@ process (inputs, outputs) = sum $ zipWith (\d n -> n * getInt mapping d) sortedO
         sortedOutput = map L.sort outputs
         distinct = L.nub (sortedInput ++ sortedOutput)
 
+        -- identify digits
         [one] = filter (\w -> length w == 2) distinct
         [seven] = filter (\w -> length w == 3) distinct
         [four] = filter (\w -> length w == 4) distinct
-        [eight] = filter (\w -> length w == 7) distinct
 
         twoThreeFive = filter (\w -> length w == 5) distinct
         sixNineZero = filter (\w -> length w == 6) distinct
 
+        [three] = filter (\n -> all (`elem`n) one) twoThreeFive
         [six] = filter (\n -> (head one `elem` n) /= (last one `elem` n)) sixNineZero
-        nineZero = filter (/= six) sixNineZero
         [nine] = filter (\n -> all (`elem` n) four) sixNineZero
         [zero] = filter (\n -> n /= nine && n /= six) sixNineZero
 
-        [three] = filter (\n -> all (`elem`n) one) twoThreeFive
-
+        -- identify segments
         [top] = filter (`notElem` one) seven
         [topRight] = filter (`notElem` six) letters
         [middle] = filter (`notElem` zero) letters
