@@ -1,9 +1,7 @@
 import           Control.Monad
 import           Data.List.Split
-import qualified Data.Vector     as V
 import           Text.Printf
 import qualified Data.List as L
-import qualified Data.Text as T
 
 main = do
     dat <- getOutput "input.txt"
