@@ -37,8 +37,7 @@ processFlashes f s
         flashes' = getFlashes f'
 
 executeFlashes :: FlashMap -> [(Int,Int)] -> FlashMap
-executeFlashes f [] = f
-executeFlashes f ((x,y):bs) = executeFlashes (increaseAdjacent f x y) bs
+executeFlashes = foldr (\(x,y) f -> increaseAdjacent f x y)
 
 getFlashes :: FlashMap  -> [(Int, Int)]
 getFlashes f = [(x, y) 
