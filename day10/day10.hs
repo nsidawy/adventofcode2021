@@ -1,9 +1,7 @@
 import           Control.Monad
 import qualified Data.List       as L
 import           Data.List.Split
-import qualified Data.Set        as S
 import qualified Data.Vector     as V
-import           Text.Printf
 
 type HeatMap = V.Vector (V.Vector Int)
 
