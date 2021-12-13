@@ -7,10 +7,10 @@ import           Text.Printf
 
 main = do
     (coords, folds) <- getInput "input.txt"
-    let part1 = getFold coords (take 1 folds)
+    let part1 = getFold coords (head folds)
     print $ length part1
 
-    let part2 = getFold coords folds
+    let part2 = foldl getFold coords folds
     let maxX = getMaxX part2
     let maxY = getMaxY part2
     printCoords (S.fromList part2) (0,0) maxX maxY
@@ -25,19 +25,12 @@ printCoords coords (x,y) mx my
         if (x,y) `S.member` coords then printf "#" else printf "."
         printCoords coords (x+1, y) mx my
 
-getFold :: [(Int, Int)] -> [(Char, Int)] -> [(Int, Int)]
-getFold coords []            = L.nub coords
-getFold coords (('x', i):fs) = getFold (getFoldX coords i) fs
-getFold coords (('y', i):fs) = getFold (getFoldY coords i) fs
-
-getFoldX :: [(Int,Int)] -> Int -> [(Int,Int)]
-getFoldX coords i = [if x < i then (x,y) else (maxX - x, y) | (x,y) <- coords]
-    where
+getFold :: [(Int, Int)] -> (Char, Int) -> [(Int, Int)]
+getFold coords (c, i)  
+    | c == 'x' = [if x < i then (x,y) else (maxX - x, y) | (x,y) <- coords]
+    | c == 'y' = [if y < i then (x,y) else (x, maxY - y) | (x,y) <- coords]
+    where 
         maxX = getMaxX coords
-
-getFoldY :: [(Int,Int)] -> Int -> [(Int,Int)]
-getFoldY coords i = [if y < i then (x,y) else (x, maxY - y) | (x,y) <- coords]
-    where
         maxY = getMaxY coords
 
 getMaxX :: [(Int,Int)] -> Int
