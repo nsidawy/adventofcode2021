@@ -2,6 +2,7 @@ import           Control.Monad
 import qualified Data.List       as L
 import           Data.List.Split
 import           Data.Maybe
+import qualified Data.Set        as S
 import           Text.Printf
 
 main = do
@@ -12,16 +13,16 @@ main = do
     let part2 = getFold coords folds
     let maxX = getMaxX part2
     let maxY = getMaxY part2
-    printCoords part2 (0,0) maxX maxY
+    printCoords (S.fromList part2) (0,0) maxX maxY
 
-printCoords :: [(Int,Int)] -> (Int,Int) -> Int -> Int -> IO ()
+printCoords :: S.Set (Int,Int) -> (Int,Int) -> Int -> Int -> IO ()
 printCoords coords (x,y) mx my
     | y > my = return ()
     | x > mx = do
         printf "\n"
         printCoords coords (0, y+1) mx my
     | otherwise = do
-        if (x,y) `elem` coords then printf "#" else printf "."
+        if (x,y) `S.member` coords then printf "#" else printf "."
         printCoords coords (x+1, y) mx my
 
 getFold :: [(Int, Int)] -> [(Char, Int)] -> [(Int, Int)]
