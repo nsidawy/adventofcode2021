@@ -7,37 +7,43 @@ import           Data.Maybe
 import           Text.Printf
 
 main = do
-    (start, transforms) <- getInput "input.txt"
+    (start, transforms) <- getInput "ex.txt"
     let part1 = runSteps start transforms 10
-    print $ getCounts part1
+    print $ getResult $ getCounts part1
 
     let countsByPair = M.fromList $ map (`getCountsByPair` transforms) $ M.keys transforms
     let start' = V.fromList $ runSteps start transforms 20
     let pairs = [[start' V.! i, start' V.! (i+1)] | i <- [0..V.length start' -2]] 
     let pairCounts = [fromJust $ M.lookup p countsByPair | p <- pairs]
-    --let counts = foldl (\s c -> M.unionWith (+) s c) M.empty pairCounts
-    let counts = foldl (\s c -> M.unionWith (+) s c) M.empty (take 4000000 pairCounts)
-    let counts' = foldl (\s c -> M.unionWith (+) s c) counts (take 4000000 $ drop 4000000  pairCounts)
-    let counts'' = foldl (\s c -> M.unionWith (+) s c) counts' (take 4000000 $ drop 8000000  pairCounts)
-    let counts''' = foldl (\s c -> M.unionWith (+) s c) counts'' (take 4000000 $ drop 12000000  pairCounts)
-    let counts'''' = foldl (\s c -> M.unionWith (+) s c) counts''' (take 4000000 $ drop 16000000  pairCounts)
-    let counts''''' = M.insertWith (+) (V.last start') 1 counts''''
-    print counts'
-    let min = minimum [c | (_, c) <- M.toList counts']
-    let max = maximum [c | (_, c) <- M.toList counts']
-    print (max - min)
+    let counts = foldl (M.unionWith (+)) M.empty (take 4000000 pairCounts)
+    let counts' = foldl (M.unionWith (+)) counts (take 4000000 $ drop 4000000  pairCounts)
+    let counts'' = foldl (M.unionWith (+)) counts' (take 4000000 $ drop 8000000  pairCounts)
+    let counts''' = foldl (M.unionWith (+)) counts'' (take 4000000 $ drop 12000000  pairCounts)
+    let counts'''' = foldl (M.unionWith (+)) counts''' (take 4000000 $ drop 16000000  pairCounts)
+    let final = M.insertWith (+) (V.last start') 1 counts''''
+    --let counts = chunkUnionWith pairCounts M.empty 100000
+    --let final = M.insertWith (+) (V.last start') 1 counts
+    print $ getResult final
+
+chunkUnionWith :: [M.Map Char Int] -> M.Map Char Int -> Int -> M.Map Char Int
+chunkUnionWith [] m _ = m
+chunkUnionWith ms m n = chunkUnionWith (drop n ms) m' n
+    where
+        m' = foldl (M.unionWith (+)) m (take n ms)
 
 getCountsByPair :: String -> M.Map String Char -> (String, M.Map Char Int)
 getCountsByPair s m = (s, M.fromListWith (+) (zip (take (length step - 1) step) (repeat 1)))
     where
         step = runSteps s m 20
 
-getCounts :: String -> Int
-getCounts s = max - min
+getCounts :: String -> M.Map Char Int
+getCounts s = M.fromListWith (+) $ zip s $ repeat 1
+
+getResult :: M.Map Char Int -> Int
+getResult m = max - min
     where
-        count = M.fromListWith (+) $ zip s $ repeat 1
-        min = minimum [c | (_, c) <- M.toList count]
-        max = maximum [c | (_, c) <- M.toList count]
+        min = minimum [c | (_, c) <- M.toList m]
+        max = maximum [c | (_, c) <- M.toList m]
 
 runSteps :: String -> M.Map String Char -> Int -> String
 runSteps s m 0 = s
