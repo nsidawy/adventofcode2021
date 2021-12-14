@@ -15,14 +15,14 @@ main = do
     let start' = V.fromList $ runSteps start transforms 20
     let pairs = [[start' V.! i, start' V.! (i+1)] | i <- [0..V.length start' -2]] 
     let pairCounts = [fromJust $ M.lookup p countsByPair | p <- pairs]
-    let counts = foldl (M.unionWith (+)) M.empty (take 4000000 pairCounts)
-    let counts' = foldl (M.unionWith (+)) counts (take 4000000 $ drop 4000000  pairCounts)
-    let counts'' = foldl (M.unionWith (+)) counts' (take 4000000 $ drop 8000000  pairCounts)
-    let counts''' = foldl (M.unionWith (+)) counts'' (take 4000000 $ drop 12000000  pairCounts)
-    let counts'''' = foldl (M.unionWith (+)) counts''' (take 4000000 $ drop 16000000  pairCounts)
-    let final = M.insertWith (+) (V.last start') 1 counts''''
-    --let counts = chunkUnionWith pairCounts M.empty 100000
-    --let final = M.insertWith (+) (V.last start') 1 counts
+    --let counts = foldl (M.unionWith (+)) M.empty (take 4000000 pairCounts)
+    --let counts' = foldl (M.unionWith (+)) counts (take 4000000 $ drop 4000000  pairCounts)
+    --let counts'' = foldl (M.unionWith (+)) counts' (take 4000000 $ drop 8000000  pairCounts)
+    --let counts''' = foldl (M.unionWith (+)) counts'' (take 4000000 $ drop 12000000  pairCounts)
+    --let counts'''' = foldl (M.unionWith (+)) counts''' (take 4000000 $ drop 16000000  pairCounts)
+    --let final = M.insertWith (+) (V.last start') 1 counts''''
+    let counts = chunkUnionWith pairCounts M.empty 4000000
+    let final = M.insertWith (+) (V.last start') 1 counts
     print $ getResult final
 
 chunkUnionWith :: [M.Map Char Int] -> M.Map Char Int -> Int -> M.Map Char Int
