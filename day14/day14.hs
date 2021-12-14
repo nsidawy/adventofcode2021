@@ -12,9 +12,7 @@ main = do
     let part1 = runSteps start transforms 10
     print $ getCounts part1
 
-    --let aggs = M.fromList $ map (\s -> (s, runSteps s transforms 20)) $ M.keys transforms
-    --let countsByPair = M.fromList $ map (\(s, s2) -> (s, M.fromListWith (+) $ zip (take (length s2 - 1) s2) $ repeat 1)) $ M.toList aggs
-    let countsByPair = M.fromList $ map (\s -> getCountsByPair s transforms) $ M.keys transforms
+    let countsByPair = M.fromList $ map (`getCountsByPair` transforms) $ M.keys transforms
     print "got counts by pair"
     let start' = V.fromList $ runSteps start transforms 20
     print $ V.length start'
@@ -26,26 +24,10 @@ main = do
     let max = maximum [c | (_, c) <- M.toList counts']
     print (max - min)
 
-    --let resultFromAggs = getResultsFromAggs start aggs
-    --print $ getCounts resultFromAggs
-    --let resultFromAggs2 = getResultsFromAggs resultFromAggs aggs
-    --print $ getCounts resultFromAggs2
-    --part2 <- runSteps start transforms 30
-    --print $ length part2
-    --print $ getCounts part2
-
 getCountsByPair :: String -> M.Map String Char -> (String, M.Map Char Int)
 getCountsByPair s m = (s, M.fromListWith (+) (zip (take (length step - 1) step) (repeat 1)))
     where
         step = runSteps s m 20
-
-getResultsFromAggs :: String -> M.Map String String -> String
-getResultsFromAggs (c1:c2:cs) m
-    | [c1,c2] `M.member` m = take (length r - 1) r ++ getResultsFromAggs (c2:cs) m
-    | otherwise = error "uh oh" -- c1 : step (c2:cs) m
-    where
-        r = fromJust $ [c1,c2] `M.lookup` m
-getResultsFromAggs cs m = cs
 
 getCountsFromAggs :: V.Vector Char -> M.Map String (M.Map Char Int) -> Int -> M.Map Char Int
 getCountsFromAggs cs m i
