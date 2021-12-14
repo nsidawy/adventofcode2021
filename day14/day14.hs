@@ -11,8 +11,9 @@ main = do
     let part1 = runSteps start transforms 10
     print $ getCounts part1
 
-    let aggs = M.fromList $ map (\s -> (s, runSteps s transforms 20)) $ M.keys transforms
-    let countsByPair = M.fromList $ map (\(s, s2) -> (s, M.fromListWith (+) $ zip (take (length s2 - 1) s2) $ repeat 1)) $ M.toList aggs
+    --let aggs = M.fromList $ map (\s -> (s, runSteps s transforms 20)) $ M.keys transforms
+    --let countsByPair = M.fromList $ map (\(s, s2) -> (s, M.fromListWith (+) $ zip (take (length s2 - 1) s2) $ repeat 1)) $ M.toList aggs
+    let countsByPair = M.fromList $ map (\s -> getCountsByPair s transforms) $ M.keys transforms
     print "got counts by pair"
     let start' = runSteps start transforms 20
     print "got step 20"
@@ -30,6 +31,11 @@ main = do
     --part2 <- runSteps start transforms 30
     --print $ length part2
     --print $ getCounts part2
+
+getCountsByPair :: String -> M.Map String Char -> (String, M.Map Char Int)
+getCountsByPair s m = (s, M.fromListWith (+) (zip (take (length step - 1) step) (repeat 1)))
+    where
+        step = runSteps s m 20
 
 getResultsFromAggs :: String -> M.Map String String -> String
 getResultsFromAggs (c1:c2:cs) m 
