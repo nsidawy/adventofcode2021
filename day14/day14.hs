@@ -17,7 +17,7 @@ main = do
     let start' = V.fromList $ runSteps start transforms 20
     print $ V.length start'
     print "got step 20"
-    let counts =  getCountsFromAggs start' countsByPair 0
+    let counts =  getCountsFromAggs (V.take 3000000 start') countsByPair M.empty 0
     let counts' = M.insertWith (+) (V.last start') 1 counts
     print counts'
     let min = minimum [c | (_, c) <- M.toList counts']
@@ -29,16 +29,16 @@ getCountsByPair s m = (s, M.fromListWith (+) (zip (take (length step - 1) step) 
     where
         step = runSteps s m 20
 
-getCountsFromAggs :: V.Vector Char -> M.Map String (M.Map Char Int) -> Int -> M.Map Char Int
-getCountsFromAggs cs m i
-    | i == V.length cs - 1 = M.empty
-    | [c1,c2] `M.member` m = foldl (\s (ch, c) -> M.insertWith (+) ch c s) counts $ M.toList next
+getCountsFromAggs :: V.Vector Char -> M.Map String (M.Map Char Int) -> M.Map Char Int -> Int -> M.Map Char Int
+getCountsFromAggs cs m m0 i
+    | i == V.length cs - 1 = m0
+    | [c1,c2] `M.member` m = getCountsFromAggs cs m m0' (i+1)
     | otherwise = error "uh oh" -- c1 : step (c2:cs) m
     where
         counts = fromJust $ [c1,c2] `M.lookup` m
-        next = getCountsFromAggs cs m (i+1)
         c1 = cs V.! i
         c2 = cs V.! (i+1)
+        m0' = foldl (\s (ch, c) -> M.insertWith (+) ch c s) m0 $ M.toList counts
 
 getCounts :: String -> Int
 getCounts s = max - min
