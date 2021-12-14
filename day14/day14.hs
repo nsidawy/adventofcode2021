@@ -2,7 +2,8 @@ import           Control.Monad
 import qualified Data.List       as L
 import           Data.List.Split
 import qualified Data.Map        as M
-import Data.Maybe
+import qualified Data.Vector        as V
+import           Data.Maybe
 import           Text.Printf
 
 main = do
@@ -15,10 +16,11 @@ main = do
     --let countsByPair = M.fromList $ map (\(s, s2) -> (s, M.fromListWith (+) $ zip (take (length s2 - 1) s2) $ repeat 1)) $ M.toList aggs
     let countsByPair = M.fromList $ map (\s -> getCountsByPair s transforms) $ M.keys transforms
     print "got counts by pair"
-    let start' = runSteps start transforms 20
+    let start' = V.fromList $ runSteps start transforms 20
+    print $ V.length start'
     print "got step 20"
-    let counts =  getCountsFromAggs start' countsByPair
-    let counts' = M.insertWith (+) (last start') 1 counts
+    let counts =  getCountsFromAggs start' countsByPair 0
+    let counts' = M.insertWith (+) (V.last start') 1 counts
     print counts'
     let min = minimum [c | (_, c) <- M.toList counts']
     let max = maximum [c | (_, c) <- M.toList counts']
@@ -38,21 +40,23 @@ getCountsByPair s m = (s, M.fromListWith (+) (zip (take (length step - 1) step) 
         step = runSteps s m 20
 
 getResultsFromAggs :: String -> M.Map String String -> String
-getResultsFromAggs (c1:c2:cs) m 
+getResultsFromAggs (c1:c2:cs) m
     | [c1,c2] `M.member` m = take (length r - 1) r ++ getResultsFromAggs (c2:cs) m
     | otherwise = error "uh oh" -- c1 : step (c2:cs) m
-    where 
+    where
         r = fromJust $ [c1,c2] `M.lookup` m
 getResultsFromAggs cs m = cs
 
-getCountsFromAggs :: String -> M.Map String (M.Map Char Int) -> M.Map Char Int
-getCountsFromAggs (c1:c2:cs) m 
+getCountsFromAggs :: V.Vector Char -> M.Map String (M.Map Char Int) -> Int -> M.Map Char Int
+getCountsFromAggs cs m i
+    | i == V.length cs - 1 = M.empty
     | [c1,c2] `M.member` m = foldl (\s (ch, c) -> M.insertWith (+) ch c s) counts $ M.toList next
     | otherwise = error "uh oh" -- c1 : step (c2:cs) m
-    where 
+    where
         counts = fromJust $ [c1,c2] `M.lookup` m
-        next = getCountsFromAggs (c2:cs) m
-getCountsFromAggs cs m = M.empty
+        next = getCountsFromAggs cs m (i+1)
+        c1 = cs V.! i
+        c2 = cs V.! (i+1)
 
 getCounts :: String -> Int
 getCounts s = max - min
@@ -62,11 +66,11 @@ getCounts s = max - min
         max = maximum [c | (_, c) <- M.toList count]
 
 runSteps :: String -> M.Map String Char -> Int -> String
-runSteps s m 0 = s 
-runSteps s m i = runSteps (step s m) m (i-1) 
+runSteps s m 0 = s
+runSteps s m i = runSteps (step s m) m (i-1)
 
 step :: String -> M.Map String Char -> String
-step (c1:c2:cs) m 
+step (c1:c2:cs) m
     | [c1,c2] `M.member` m = [c1, fromJust $ [c1,c2] `M.lookup` m] ++ step (c2:cs) m
     | otherwise = error "uh oh" -- c1 : step (c2:cs) m
 step cs m = cs
