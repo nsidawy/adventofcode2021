@@ -15,9 +15,13 @@ main = do
     let countsByPair = M.fromList $ map (`getCountsByPair` transforms) $ M.keys transforms
     print "got counts by pair"
     let start' = V.fromList $ runSteps start transforms 20
+    let pairs = [[start' V.! i, start' V.! (i+1)] | i <- [0..V.length start' -2]] 
+    let pairCounts = [fromJust $ M.lookup p countsByPair | p <- pairs]
     print $ V.length start'
-    print "got step 20"
-    let counts =  getCountsFromAggs (V.take 3000000 start') countsByPair M.empty 0
+    print $ length pairs
+    print $ length pairCounts
+    --let counts =  getCountsFromAggs start' countsByPair M.empty 0
+    let counts = foldl (\s c -> M.unionWith (+) s c) M.empty pairCounts
     let counts' = M.insertWith (+) (V.last start') 1 counts
     print counts'
     let min = minimum [c | (_, c) <- M.toList counts']
