@@ -7,7 +7,7 @@ import           Data.Maybe
 import           Text.Printf
 
 main = do
-    (start, transforms) <- getInput "ex.txt"
+    (start, transforms) <- getInput "input.txt"
     let part1 = runSteps start transforms 10
     print $ getResult $ getCounts part1
 
@@ -21,7 +21,8 @@ main = do
     --let counts''' = foldl (M.unionWith (+)) counts'' (take 4000000 $ drop 12000000  pairCounts)
     --let counts'''' = foldl (M.unionWith (+)) counts''' (take 4000000 $ drop 16000000  pairCounts)
     --let final = M.insertWith (+) (V.last start') 1 counts''''
-    let counts = chunkUnionWith pairCounts M.empty 4000000
+    --let counts = chunkUnionWith pairCounts M.empty 4000000
+    let counts = L.foldl' (M.unionWith (+)) M.empty pairCounts
     let final = M.insertWith (+) (V.last start') 1 counts
     print $ getResult final
 
