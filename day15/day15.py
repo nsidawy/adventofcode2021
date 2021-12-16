@@ -43,8 +43,6 @@ def a_star(grid):
         elif (lx,ly) == (maxX-1, maxY-1):
             return distances[x][y]
 
-        print(f"Visiting node ({lx},{ly}) with currently lowest priority of {lowest_priority}")
-
         n = neighbors(lx,ly)
         for (x,y) in n:
             if not visited[x][y]:
