@@ -40,7 +40,7 @@ runSteps s m i = runSteps (step s m) m (i-1)
 step :: String -> M.Map String Char -> String
 step (c1:c2:cs) m
     | [c1,c2] `M.member` m = [c1, fromJust $ [c1,c2] `M.lookup` m] ++ step (c2:cs) m
-    | otherwise = error "uh oh" -- c1 : step (c2:cs) m
+    | otherwise = error "uh oh"
 step cs m = cs
 
 getInput :: String -> IO (String, M.Map String Char)
