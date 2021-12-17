@@ -3,66 +3,66 @@ import qualified Data.List       as L
 import           Data.List.Split
 
 main = do
-    binary <- getInput "ex5.txt"
-    packets <- processPacket binary
-    let vSum = sum [v | (v, _, _) <- fst packets]
-    print binary
-    print packets
+    binary <- getInput "input.txt"
+    let (packets, _) = readPacket binary
+    let vSum = sum [v | (v, _, _) <- packets]
     print vSum
 
-getInput :: String -> IO [Int]
-getInput path = do
-    lines <- lines <$> readFile path
-    return $ hexToBin $ head lines
-
-processPacket :: [Int] -> IO ([(Int, Int, [Int])],[Int])
-processPacket [] = return ([],[9,9,9]) 
-processPacket bs 
-    | t == 4 = return ([(v, t, lv)], lr)
-    | ot == 0 = do
-        let t0r = drop 22 bs 
-        let t0l = binToDec $ take 15 $ drop 7 bs
-        (packets0, t0rest) <- processType0 t0r t0l
-        return ((v, t, take 16 $ drop 6 bs) : packets0, t0rest)
-    | ot == 1 = do
-        let t1r = drop 18 bs 
-        let t1l = binToDec $ take 11 $ drop 7 bs
-        (packets1, t1rest) <- processType1 t1r t1l
-        return ((v, t, take 12 $ drop 6 bs) : packets1, t1rest)
+readPacket :: [Int] -> ([(Int, Int, [Int])],[Int])
+readPacket [] = ([],[9,9,9]) 
+readPacket bs 
+    | t == 4 = ([(v, t, lv)], lr)
+    | ot == 0 = ((v, t, take 16 $ drop 6 bs) : packets0, t0rest)
+    | ot == 1 = ((v, t, take 12 $ drop 6 bs) : packets1, t1rest)
     | otherwise = error "oops"
     where 
         v = binToDec $ take 3 bs
         t = binToDec $ take 3 $ drop 3 bs
-        (lv, lr) = processLiteral $ drop 6 bs
+        (lv, lr) = readLiteral $ drop 6 bs
+
         ot = bs !! 6
 
-processType0 :: [Int] -> Int -> IO ([(Int, Int, [Int])],[Int])
-processType0 bs 0 = return ([],bs)
-processType0 bs l = do
-    (packets, rest) <- processPacket bs
-    let l' = length bs - length rest
-    (npackets, nrest) <- processType0 rest (l - l') 
-    return (packets ++ npackets, nrest)
+        t0r = drop 22 bs 
+        t0l = binToDec $ take 15 $ drop 7 bs
+        (packets0, t0rest) = readType0 t0r t0l
 
-processType1 :: [Int] -> Int -> IO ([(Int, Int, [Int])],[Int])
-processType1 bs 0 = return ([],bs)
-processType1 bs n = do
-    (packets, rest) <- processPacket bs
-    (npackets, nrest) <- processType1 rest (n-1) 
-    return (packets ++ npackets, nrest)
+        t1r = drop 18 bs 
+        t1l = binToDec $ take 11 $ drop 7 bs
+        (packets1, t1rest) = readType1 t1r t1l
 
-processLiteral :: [Int] -> ([Int], [Int])
-processLiteral bs 
+
+readType0 :: [Int] -> Int -> ([(Int, Int, [Int])],[Int])
+readType0 bs 0 = ([],bs)
+readType0 bs l = (packets ++ npackets, nrest)
+    where 
+        (packets, rest) = readPacket bs
+        l' = length bs - length rest
+        (npackets, nrest) = readType0 rest (l - l') 
+
+readType1 :: [Int] -> Int -> ([(Int, Int, [Int])],[Int])
+readType1 bs 0 = ([],bs)
+readType1 bs n = (packets ++ npackets, nrest)
+    where 
+        (packets, rest) = readPacket bs
+        (npackets, nrest) = readType1 rest (n-1) 
+
+readLiteral :: [Int] -> ([Int], [Int])
+readLiteral bs 
     | hasNext = (value ++ nv, nrest)
     | otherwise = (value, rest)
     where
         hasNext = head bs == 1
         value = take 5 bs
         rest = drop 5 bs
-        (nv, nrest) = processLiteral rest
+        (nv, nrest) = readLiteral rest
 
 binToDec :: [Int] -> Int
 binToDec bs = sum [i * (2 ^ e) | (i, e) <- zip (reverse bs) [0..]]
+
+getInput :: String -> IO [Int]
+getInput path = do
+    lines <- lines <$> readFile path
+    return $ hexToBin $ head lines
 
 hexToBin :: [Char] -> [Int]
 hexToBin [] = []
