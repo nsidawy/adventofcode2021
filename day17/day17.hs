@@ -10,13 +10,20 @@ main = do
     let xs = [0..maxX]
     let yPoss = [minY..yVelocityMax] 
 
-    let countsByX = [(x, validXCounts) | x <- xs, let validXCounts = take takeSize $ isXValid x 0 minX maxX 0, not $ null validXCounts]
+    let countsByX = [
+            (x, validXCounts) | x <- xs,
+            let validXCounts = take takeSize $ isXValid x 0 minX maxX 0,
+            not $ null validXCounts]
     let allXCounts = concat [[(x,c) | c <- cs] | (x, cs) <- countsByX]
-    let validVelocities = L.sort . L.nub $ [(x,y,c) | (x,c) <- allXCounts, y <- yPoss, isYValid y minY maxY c]
-    let result = maximum $ [(y * (y + 1)) `div` 2 | (_,y,c) <- validVelocities]
-    print result
+    let validVelocities = L.sort . L.nub $ [
+            (x,y,c) | (x,c) <- allXCounts,
+            y <- yPoss,
+            isYValid y minY maxY c]
+    let maxHeight = maximum $ [(y * (y + 1)) `div` 2 | (_,y,c) <- validVelocities]
+    print maxHeight
 
-    print $ length . L.nub $ [(x,y) | (x,y,_) <- validVelocities]
+    let uniqueSolutions = L.nub $ [(x,y) | (x,y,_) <- validVelocities]
+    print $ length uniqueSolutions
 
 isXValid :: Int -> Int -> Int -> Int -> Int -> [Int]
 isXValid x curX minX maxX cnt 
