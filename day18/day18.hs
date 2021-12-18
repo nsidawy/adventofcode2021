@@ -12,15 +12,15 @@ data Snail =
 main = do
     snails <- getInput "input.txt"
     let final = foldl1 (\s c -> reduce $ add s c) snails
-    print $ printSnail final
+    print $ snailToStr final
     print $ getMagnitude final
 
     let maxOfPairs = maximum $ map getMagnitude $ concat [[reduce $ add x y, reduce $ add y x] | x <- snails, y <- snails, x /= y]
     print maxOfPairs
 
-printSnail :: Snail -> String
-printSnail (Value a) = show a
-printSnail (Pair (a,b)) = "[" ++ printSnail a ++ "," ++ printSnail b ++ "]" 
+snailToStr :: Snail -> String
+snailToStr (Value a) = show a
+snailToStr (Pair (a,b)) = "[" ++ snailToStr a ++ "," ++ snailToStr b ++ "]" 
 
 getMagnitude :: Snail -> Int
 getMagnitude (Value x) = x
@@ -31,68 +31,71 @@ add s1 s2 = Pair (s1, s2)
 
 reduce :: Snail -> Snail
 reduce s 
-    | M.isJust explodes = reduce $ explode s $ M.fromJust explodes
-    | isSplit = reduce s'
+    | isExplode = reduce sExplode
+    | isSplit = reduce sSplit
     | otherwise = s
     where 
-        explodes = hasExplode s 0
-        (s',isSplit) = trySplit s
+        (sExplode, isExplode) = tryExplode s
+        (sSplit, isSplit) = trySplit s
 
-hasExplode :: Snail -> Int -> Maybe Snail
-hasExplode (Value _) _ = M.Nothing
-hasExplode p 4 = M.Just p
-hasExplode (Pair (a,b)) i = if M.isNothing e1 then e2 else e1
+tryExplode :: Snail -> (Snail, Bool)
+tryExplode s
+    | M.isNothing eInd = (s, False)
+    | otherwise = (parseLine sStr''', True)
     where 
-        e1 = hasExplode a (i+1)
-        e2 = hasExplode b (i+1)
-
-explode :: Snail -> Snail -> Snail
-explode s e = parseLine sStr'''
-    where 
-        sStr = printSnail s
-        eStr = printSnail e
-        (Pair (Value a, Value b)) = e
+        sStr = snailToStr s
         eInd = getExplodeInd sStr 0 0
+        eStr = getExplodeExp (drop (M.fromJust eInd) sStr)
+        (Pair (Value a, Value b)) = parseLine eStr
         
-        addPrevious :: String -> Int -> Int -> String
-        addPrevious s i v 
-            | i < 0 = s
-            | C.isDigit $ s !! i = take (i - length int + 1) s ++ show (v + read int) ++ drop (i+1) s
-            | otherwise = addPrevious s (i-1) v
-            where 
-                int = lookbackInt s i
-        sStr' = addPrevious sStr (eInd - 1) a
-
-        addAfter :: String -> Int -> Int -> String
-        addAfter s i v 
-            | i >= length s = s
-            | C.isDigit $ s !! i = take i s ++ show (v + read int) ++ drop (i + length int) s
-            | otherwise = addAfter s (i+1) v
-            where 
-                int = lookforwardInt s i
-        eInd' = getExplodeInd sStr' 0 0
-        sStr'' = addAfter sStr' (eInd' + length eStr) b
+        sStr' = addAfter sStr (M.fromJust eInd + length eStr) b
+        sStr'' = addPrevious sStr' (M.fromJust eInd - 1) a
+        eInd' = M.fromJust $ getExplodeInd sStr'' 0 0
 
         sStr''' = take eInd' sStr'' ++ "0" ++ drop (eInd' + length eStr) sStr''
 
-getExplodeInd :: String -> Int -> Int -> Int
-getExplodeInd [] _ _ = -1
-getExplodeInd ('[':s) 4 i = i
+getExplodeInd :: String -> Int -> Int -> Maybe Int
+getExplodeInd [] _ _ = Nothing
+getExplodeInd ('[':s) 4 i = Just i
 getExplodeInd ('[':s) d i = getExplodeInd s (d+1) (i+1)
 getExplodeInd (']':s) d i = getExplodeInd s (d-1) (i+1)
 getExplodeInd (_:s) d i = getExplodeInd s d (i+1)
 
+getExplodeExp :: String -> String
+getExplodeExp (']':s) = [']']
+getExplodeExp (c:s) = c : getExplodeExp s
+
+addPrevious :: String -> Int -> Int -> String
+addPrevious s i v 
+    | i < 0 = s
+    | C.isDigit $ s !! i = take (i - length int + 1) s ++ show (v + read int) ++ drop (i+1) s
+    | otherwise = addPrevious s (i-1) v
+    where 
+        int = lookbackInt s i
+
 lookbackInt :: String -> Int  -> String
 lookbackInt s i 
     | i < 0 = []
-    | C.isDigit $ s !! i = lookbackInt s (i-1) ++ [s !! i]
+    | C.isDigit c = lookbackInt s (i-1) ++ [c]
     | otherwise = []
+    where
+        c = s !! i
+
+addAfter :: String -> Int -> Int -> String
+addAfter s i v 
+    | i >= length s = s
+    | C.isDigit $ s !! i = take i s ++ show (v + read int) ++ drop (i + length int) s
+    | otherwise = addAfter s (i+1) v
+    where 
+        int = lookforwardInt s i
 
 lookforwardInt :: String -> Int  -> String
 lookforwardInt s i 
     | i >= length s = []
-    | C.isDigit $ s !! i = s !! i : lookforwardInt s (i+1) 
+    | C.isDigit c = c : lookforwardInt s (i+1) 
     | otherwise = []
+    where
+        c = s !! i
 
 trySplit :: Snail -> (Snail, Bool)
 trySplit (Value x) 
