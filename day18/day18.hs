@@ -18,10 +18,6 @@ main = do
     let maxOfPairs = maximum $ map getMagnitude $ concat [[reduce $ add x y, reduce $ add y x] | x <- snails, y <- snails, x /= y]
     print maxOfPairs
 
-snailToStr :: Snail -> String
-snailToStr (Value a) = show a
-snailToStr (Pair (a,b)) = "[" ++ snailToStr a ++ "," ++ snailToStr b ++ "]" 
-
 getMagnitude :: Snail -> Int
 getMagnitude (Value x) = x
 getMagnitude (Pair (a,b)) = 3 * getMagnitude a + 2 * getMagnitude b 
@@ -37,6 +33,20 @@ reduce s
     where 
         (sExplode, isExplode) = tryExplode s
         (sSplit, isSplit) = trySplit s
+
+trySplit :: Snail -> (Snail, Bool)
+trySplit (Value x) 
+    | x > 9 = (Pair (Value half, Value (half + remainder)), True)
+    | otherwise = (Value x, False)
+    where 
+        half = x `div` 2
+        remainder = x `mod` 2
+trySplit (Pair (a,b))
+    | isASplit = (Pair (a', b), True)
+    | otherwise = (Pair (a', b'), isBSplit)
+    where 
+        (a', isASplit) = trySplit a
+        (b', isBSplit) = trySplit b
 
 tryExplode :: Snail -> (Snail, Bool)
 tryExplode s
@@ -97,19 +107,9 @@ lookforwardInt s i
     where
         c = s !! i
 
-trySplit :: Snail -> (Snail, Bool)
-trySplit (Value x) 
-    | x > 9 = (Pair (Value half, Value (half + remainder)), True)
-    | otherwise = (Value x, False)
-    where 
-        half = x `div` 2
-        remainder = x `mod` 2
-trySplit (Pair (a,b))
-    | isASplit = (Pair (a', b), True)
-    | otherwise = (Pair (a', b'), isBSplit)
-    where 
-        (a', isASplit) = trySplit a
-        (b', isBSplit) = trySplit b
+snailToStr :: Snail -> String
+snailToStr (Value a) = show a
+snailToStr (Pair (a,b)) = "[" ++ snailToStr a ++ "," ++ snailToStr b ++ "]" 
 
 getInput :: String -> IO [Snail]
 getInput path = do
