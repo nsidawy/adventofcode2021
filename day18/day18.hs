@@ -27,12 +27,25 @@ add s1 s2 = Pair (s1, s2)
 
 reduce :: Snail -> Snail
 reduce s 
-    | isExplode = reduce sExplode
+    | M.isJust explodePair = reduce sExplode''
     | isSplit = reduce sSplit
     | otherwise = s
     where 
-        (sExplode, isExplode) = tryExplode s
+        (sExplode, explodePair, path) = tryExplode s 0 ""
         (sSplit, isSplit) = trySplit s
+
+        Pair (Value a, Value b) = M.fromJust explodePair
+        path' = M.fromJust path
+
+        lastLeftInd = L.elemIndex 'L' (reverse path')
+        sExplode'
+            | M.isJust lastLeftInd = addToPath sExplode (take (length path' - M.fromJust lastLeftInd - 1) path' ++ "R" ++ repeat 'L') b 
+            | otherwise = sExplode
+
+        lastRightInd = L.elemIndex 'R' (reverse path')
+        sExplode''
+            | M.isJust lastRightInd = addToPath sExplode' (take (length path' - M.fromJust lastRightInd - 1) path' ++ "L" ++ repeat 'R') a 
+            | otherwise = sExplode'
 
 trySplit :: Snail -> (Snail, Bool)
 trySplit (Value x) 
@@ -48,64 +61,20 @@ trySplit (Pair (a,b))
         (a', isASplit) = trySplit a
         (b', isBSplit) = trySplit b
 
-tryExplode :: Snail -> (Snail, Bool)
-tryExplode s
-    | M.isNothing eInd = (s, False)
-    | otherwise = (parseLine sStr''', True)
-    where 
-        sStr = snailToStr s
-        eInd = getExplodeInd sStr 0 0
-        eStr = getExplodeExp (drop (M.fromJust eInd) sStr)
-        (Pair (Value a, Value b)) = parseLine eStr
-        
-        sStr' = addAfter sStr (M.fromJust eInd + length eStr) b
-        sStr'' = addPrevious sStr' (M.fromJust eInd - 1) a
-        eInd' = M.fromJust $ getExplodeInd sStr'' 0 0
-
-        sStr''' = take eInd' sStr'' ++ "0" ++ drop (eInd' + length eStr) sStr''
-
-getExplodeInd :: String -> Int -> Int -> Maybe Int
-getExplodeInd [] _ _ = Nothing
-getExplodeInd ('[':s) 4 i = Just i
-getExplodeInd ('[':s) d i = getExplodeInd s (d+1) (i+1)
-getExplodeInd (']':s) d i = getExplodeInd s (d-1) (i+1)
-getExplodeInd (_:s) d i = getExplodeInd s d (i+1)
-
-getExplodeExp :: String -> String
-getExplodeExp (']':s) = [']']
-getExplodeExp (c:s) = c : getExplodeExp s
-
-addPrevious :: String -> Int -> Int -> String
-addPrevious s i v 
-    | i < 0 = s
-    | C.isDigit $ s !! i = take (i - length int + 1) s ++ show (v + read int) ++ drop (i+1) s
-    | otherwise = addPrevious s (i-1) v
-    where 
-        int = lookbackInt s i
-
-lookbackInt :: String -> Int  -> String
-lookbackInt s i 
-    | i < 0 = []
-    | C.isDigit c = lookbackInt s (i-1) ++ [c]
-    | otherwise = []
+tryExplode :: Snail -> Int -> String -> (Snail, Maybe Snail, Maybe String)
+tryExplode (Value x) _ _ = (Value x, Nothing, Nothing)
+tryExplode (Pair (a, b)) 4 p = (Value 0, Just $ Pair (a, b), Just p)  
+tryExplode (Pair (a, b)) d p 
+    | M.isJust as = (Pair (a', b), as, ap)
+    | otherwise = (Pair (a', b'), bs , bp)
     where
-        c = s !! i
+        (a', as, ap) = tryExplode a (d+1) (p++"L")
+        (b', bs, bp) = tryExplode b (d+1) (p++"R")
 
-addAfter :: String -> Int -> Int -> String
-addAfter s i v 
-    | i >= length s = s
-    | C.isDigit $ s !! i = take i s ++ show (v + read int) ++ drop (i + length int) s
-    | otherwise = addAfter s (i+1) v
-    where 
-        int = lookforwardInt s i
-
-lookforwardInt :: String -> Int  -> String
-lookforwardInt s i 
-    | i >= length s = []
-    | C.isDigit c = c : lookforwardInt s (i+1) 
-    | otherwise = []
-    where
-        c = s !! i
+addToPath :: Snail -> String -> Int -> Snail
+addToPath (Value x) _ i = Value (x+i)
+addToPath (Pair (a,b)) ('L':p) i = Pair (addToPath a p i, b)
+addToPath (Pair (a,b)) ('R':p) i = Pair (a, addToPath b p i)
 
 snailToStr :: Snail -> String
 snailToStr (Value a) = show a
