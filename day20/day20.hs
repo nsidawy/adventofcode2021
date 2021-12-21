@@ -10,32 +10,31 @@ type Grid = M.Map (Int,Int) Char
 main = do
     (codex, gridMap) <- getInput "input.txt"
     printGrid gridMap
-    grid' <- solve codex gridMap 2
-    let count = sum [if v == '#' then 1 else 0 | (_,v) <- M.toList grid']
-    printGrid grid'
+    let result = solve codex gridMap 50
+    let count = sum [if v == '#' then 1 else 0 | (_,v) <- M.toList result]
+    printGrid result
     print count
 
-solve :: Codex -> Grid -> Int -> IO Grid
-solve _ g 0 = return g
-solve c g n = do
-    printGrid g'
-    solve c g' (n-1)
+solve :: Codex -> Grid -> Int -> Grid
+solve _ g 0 = g
+solve c g n = solve c g' (n-1)
     where
         xs = [x | (x,_) <- M.keys g]
         ys = [y | (_,y) <- M.keys g]
-        minX = -110
-        maxX = 210
-        minY = -110
-        maxY = 210
-        g' = M.fromList $ step c g (minX,maxX,minY,maxY) (minX,minY)
+        minX = minimum xs - 1
+        maxX = maximum xs + 1
+        minY = minimum ys - 1
+        maxY = maximum ys + 1
+        g' = M.fromList $ step c g (minX,maxX,minY,maxY) (minX,minY) (odd n)
 
-step :: Codex -> Grid -> (Int,Int,Int,Int) -> (Int,Int) -> [((Int,Int),Char)]
-step c g (minX,maxX,minY,maxY) (x,y)
+step :: Codex -> Grid -> (Int,Int,Int,Int) -> (Int,Int) -> Bool -> [((Int,Int),Char)]
+step c g (minX,maxX,minY,maxY) (x,y) isOdd
     | y > maxY = []
-    | x > maxX = step c g (minX,maxX,minY,maxY) (minX, y+1)
-    | otherwise = ((x,y),v) : step c g (minX,maxX,minY,maxY) (x+1, y)
+    | x > maxX = step c g (minX,maxX,minY,maxY) (minX, y+1) isOdd
+    | otherwise = ((x,y),v) : step c g (minX,maxX,minY,maxY) (x+1, y) isOdd
         where
-            get c = M.findWithDefault '.' c g
+            def = if isOdd && c V.! 0 == '#' then '#' else '.'
+            get c = M.findWithDefault def c g
             bs = [get (x-1,y-1), get (x,y-1), get (x+1,y-1),
                 get (x-1,y), get (x,y), get (x+1,y),
                 get (x-1,y+1), get (x,y+1), get (x+1,y+1)]
