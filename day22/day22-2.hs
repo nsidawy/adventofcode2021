@@ -1,9 +1,8 @@
 import           Control.Monad
-import qualified Data.List       as L
+import qualified Data.Foldable   as F
+import           Data.List.Split
 import qualified Data.Map        as M
-import qualified Data.Vector     as V
-import Data.List.Split
-import           Text.Printf
+import qualified Data.Sequence   as S
 
 type Cube = M.Map (Int,Int,Int) Bool
 type Range = ((Int,Int),(Int,Int),(Int,Int))
@@ -11,16 +10,16 @@ type Instruction = (Range,Bool)
 
 main = do
     instructions <- getInput "input.txt"
-    let cube = foldl applyLimited M.empty instructions
+    let cube = foldl apply M.empty instructions
     let count = sum [if f then 1 else 0 | (_,f) <- M.toList cube]
     print count
-    let result = foldl applyFull [] instructions
-    print $ countRange result
+    let result = foldl apply2 (S.fromList []) instructions
+    print $ countRange $ F.toList result
     print "done"
 
-applyLimited :: Cube -> Instruction -> Cube
-applyLimited c (((x1,x2),(y1,y2),(z1,z2)),f) = foldl (\cube (x,y,z) -> M.insert (x,y,z) f cube) c coords 
-    where 
+apply :: Cube -> Instruction -> Cube
+apply c (((x1,x2),(y1,y2),(z1,z2)),f) = foldl (\cube (x,y,z) -> M.insert (x,y,z) f cube) c coords
+    where
         x1' = if x1 < -50 then -50 else x1
         x2' = if x2 > 50 then 50 else x2
         y1' = if y1 < -50 then -50 else y1
@@ -29,16 +28,16 @@ applyLimited c (((x1,x2),(y1,y2),(z1,z2)),f) = foldl (\cube (x,y,z) -> M.insert 
         z2' = if z2 > 50 then 50 else z2
         coords = [(x,y,z) | x <- [x1'..x2'], y <- [y1'..y2'], z <- [z1'..z2']]
 
-applyFull :: [Range] -> Instruction -> [Range]
-applyFull [] (r2,f) = [r2 | f]
-applyFull (r1:rs) (r2,f) = r' ++ next
-    where 
-        r' = getRangeDiff r1 r2
-        next = applyFull rs (r2,f)
+apply2 :: S.Seq Range -> Instruction -> S.Seq Range
+apply2 rs (r2,f) = next' S.>< final
+    where
+        next = fmap (`getRangeDiff` r2) rs
+        next' = F.foldl (S.><) S.empty next
+        final = S.fromList [r2 | f]
 
-getRangeDiff :: Range -> Range -> [Range]
+getRangeDiff :: Range -> Range -> S.Seq Range
 getRangeDiff ((x11,x12),(y11,y12),(z11,z12)) ((x21,x22),(y21,y22),(z21,z22)) =
-        [(x,y,z) | x <- xdo, y <- ydo, z <- zdo] ++
+        S.fromList $ [(x,y,z) | x <- xdo, y <- ydo, z <- zdo] ++
         [(x,y,z) | x <- xdo, y <- ydf, z <- zdf] ++
         [(x,y,z) | x <- xdf, y <- ydo, z <- zdf] ++
         [(x,y,z) | x <- xdf, y <- ydf, z <- zdo] ++
@@ -60,7 +59,7 @@ getDiff (x11,x12) (x21,x22)
     | otherwise = error $ show (x11,x12) ++ show (x21,x22)
 
 countRange :: [Range] -> Int
-countRange = foldl (\s ((x1,x2),(y1,y2),(z1,z2)) ->s + ((x2-x1)+1) * ((y2-y1)+1) * ((z2-z1)+1)) 0
+countRange rs = sum $ map (\((x1,x2),(y1,y2),(z1,z2)) -> ((x2-x1)+1) * ((y2-y1)+1) * ((z2-z1)+1)) rs
 
 getInput :: String -> IO [Instruction]
 getInput path = do
@@ -77,4 +76,4 @@ parseLine l = ((xRange, yRange, zRange), flip')
 parseRange :: String -> (Int,Int)
 parseRange r = (min,max)
     where
-       [min,max] = map read $ splitOn ".." (drop 2 r) 
+       [min,max] = map read $ splitOn ".." (drop 2 r)
