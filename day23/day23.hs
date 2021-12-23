@@ -28,16 +28,20 @@ sortPositions = L.sortBy (\(_,x1,y1) (_,x2,y2) -> if x1 < x2 || (x1 == x2 && y1 
 solve :: [Position] -> Int -> Memo -> IO (Int, Memo)
 solve ps cost memo
     | isFinal ps = return (cost, memo)
-    | all (\(_,ms) -> null ms) allMoves = return (1000000000000, memo)
+    | null allMoves = return (1000000000000, memo)
     | otherwise = do
         print ps
         print allMoves
-        solves <- mapM (\(p,ms) -> mapM (\m -> solve (applyMove ps p m) (cost + getCost p m) memo) ms) allMoves
-        let (cost',_) = L.minimumBy (\(c1,_) (c2,_) -> if c1 <= c2 then LT else GT) $ concat solves
-        let memo' = M.insert (L.sort ps) cost' memo
-        return (cost',memo')
+        (cost', memo') <- foldM agg (100000000000, memo) allMoves
+        let memo'' = M.insert (L.sort ps) cost' memo'
+        return (cost',memo'')
     where 
-        allMoves = map (\p -> (p, getMoves ps p)) ps
+        allMovesGroup = map (\p -> (p, getMoves ps p)) ps
+        allMoves = concat [[(p,m) | m <- ms] | (p,ms) <- allMovesGroup]
+        agg (sc,sm) (p,m) = do
+            (cc', mm') <- solve (applyMove ps p m) (cost + getCost p m) sm
+            return (minimum [sc, cc'], mm')
+
     
 getMoves :: [Position] -> Position -> [Position]
 getMoves ps (b,x,y) 
