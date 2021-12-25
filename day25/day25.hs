@@ -8,23 +8,17 @@ type CuMap = (S.Set (Int,Int), S.Set(Int,Int))
 
 main = do
     (cumap, maxX, maxY) <- getInput "input.txt"
-    print (cumap,maxX,maxY)
     print $ stepAll cumap (maxX,maxY) 1
 
 stepAll :: CuMap -> (Int,Int) -> Int -> Int
-stepAll (r,d) m n  
+stepAll (r,d) (mx,my) n  
     | S.size (S.intersection r nr) == rSize && S.size (S.intersection d nd) == dSize = n
-    | otherwise = stepAll (nr,nd) m (n+1)
+    | otherwise = stepAll (nr,nd) (mx,my) (n+1)
     where
-        (nr,nd) = step (r,d) m
+        nr = stepRight (r,d) mx
+        nd = stepDown (nr,d) my
         rSize = S.size r
         dSize = S.size d
-
-step :: CuMap -> (Int,Int) -> CuMap
-step (r,d) (mx,my) = (nRight,nDown)
-    where 
-        nRight = stepRight (r,d) mx
-        nDown = stepDown (nRight,d) my
 
 stepRight :: CuMap -> Int -> S.Set (Int,Int)
 stepRight (right,down) mx = nRight
