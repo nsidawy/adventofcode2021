@@ -15,26 +15,17 @@ stepAll (r,d) (mx,my) n
     | S.size (S.intersection r nr) == rSize && S.size (S.intersection d nd) == dSize = n
     | otherwise = stepAll (nr,nd) (mx,my) (n+1)
     where
-        nr = stepRight (r,d) mx
-        nd = stepDown (nr,d) my
+        nr = S.fromList [if stuck then (x,y) else (nextX,y) | 
+            (x,y) <- S.toList r,
+            let nextX = if x == mx then 0 else x+1,
+            let stuck = (nextX,y) `S.member` d || (nextX,y) `S.member` r]
+        nd = S.fromList [if stuck then (x,y) else (x,nextY) | 
+            (x,y) <- S.toList d,
+            let nextY = if y == my then 0 else y+1,
+            let stuck = (x,nextY) `S.member` d || (x,nextY) `S.member` nr]
+
         rSize = S.size r
         dSize = S.size d
-
-stepRight :: CuMap -> Int -> S.Set (Int,Int)
-stepRight (right,down) mx = nRight
-    where
-        nRight = S.fromList [if stuck then (x,y) else (nextX,y) | 
-            (x,y) <- S.toList right,
-            let nextX = if x == mx then 0 else x+1,
-            let stuck = (nextX,y) `S.member` down || (nextX,y) `S.member` right]
-
-stepDown :: CuMap -> Int -> S.Set (Int,Int)
-stepDown (right,down) my = nDown
-    where
-        nDown = S.fromList [if stuck then (x,y) else (x,nextY) | 
-            (x,y) <- S.toList down,
-            let nextY = if y == my then 0 else y+1,
-            let stuck = (x,nextY) `S.member` down || (x,nextY) `S.member` right]
 
 getInput :: String -> IO (CuMap, Int, Int)
 getInput path = do
