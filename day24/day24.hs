@@ -22,52 +22,50 @@ data Instruction =
     deriving (Show)
 
 type Register = (Int,Int,Int,Int)
-type ARegister = M.Map Var Value
 
 defaultRegister = (0,0,0,0)
-defaultARegister = M.fromList [(X,I 0), (Y,I 0), (Z,I 0), (W,I 0)]
+consts = [
+    --div,xadd,yadd
+    (1,11,6),--0 x13
+    (1,11,12),--1 x12
+    (1,15,8),--2 x3
+    (26,-11,7),--3 y2
+    (1,15,7),--4 x11
+    (1,15,12),--5 x10
+    (1,14,2),--6 x7
+    (26,-7,15),--7 y6
+    (1,12,4),--8 x9
+    (26,-6,5),--9 x8
+    (26,-10,12),--10 y5
+    (26,-15,11),--11 y4
+    (26,-9,13),--12 y1
+    (26,0,7)]--13 y0
+
+a = reverse [1..9]
+vals1 = [[w0_13,w1_12,w2_3,w2_3-3,9,w5_10,w6_7,w6_7-5,w8_9,w8_9-2,w5_10+2,1,w1_12+3,w0_13+6] |
+    w0_13 <- reverse [1..3],
+    w1_12 <- reverse [1..6],
+    w2_3 <- reverse [4..9],
+    w5_10 <- reverse [1..7],
+    w6_7 <- reverse [6..9],
+    w8_9 <- reverse [3..9]
+    ]
+vals2 = [[w0_13,w1_12,w2_3,w2_3-3,9,w5_10,w6_7,w6_7-5,w8_9,w8_9-2,w5_10+2,1,w1_12+3,w0_13+6] |
+    w0_13 <- [1..3],
+    w1_12 <- [1..6],
+    w2_3 <- [4..9],
+    w5_10 <- [1..7],
+    w6_7 <- [6..9],
+    w8_9 <- [3..9]
+    ]
 
 main = do
     instructions <- getInput "input.txt"
-    start <- getArgs
-    let maxMonad =  99999936421899
-    --print instructions
-    let ci = chunkByInput instructions
-    print <$> runChunk ci defaultRegister (read (head start)) []
-    --print <$> findMaxMonad maxMonad instructions
+    print $ getAnswer vals1 instructions
+    print $ getAnswer vals2 instructions
 
-chunkByInput :: [Instruction] -> [[Instruction]]
-chunkByInput [] = []
-chunkByInput is = (head is : takeWhile isNotInput (tail is)) : chunkByInput (dropWhile (\i -> isNotInput i) (tail is))
-    where
-        isNotInput (Inp _) = False
-        isNotInput _ = True
-
-findMaxMonad :: Int -> [Instruction] -> IO Int
-findMaxMonad monad is
-    | 0 `elem` monadInts = findMaxMonad (monad - 1) is
-    | result == 0 = return monad
-    | otherwise = do
-        when (drop 9 monadInts == [9,9,9,9,9]) $ print $ show monad ++ "\t" ++ show result
-        findMaxMonad (monad - 1) is
-    where
-        monadInts = map C.digitToInt $ show monad
-        (_,_,_,result) = run is defaultRegister monadInts
-
-runChunk :: [[Instruction]] -> Register -> Int -> [Int] -> IO (Maybe [Int])
-runChunk [] (_,_,_,z) _ e
-    | z == 0 = return $ Just e
-    | otherwise = do
-        when (take 5 e == [9,9,9,9,9]) $ print (e,z) 
-        return Nothing 
-runChunk (i:is) r n e
-    | n == 0 = return Nothing
-    | otherwise = do
-        answer <- runChunk is r' 9 (n:e)
-        if isJust answer then return answer else runChunk (i:is) r (n-1) e
-    where 
-        r' = run i r [n]
-        tries = [9,8,7,6,5,4,3,2,1]
+getAnswer :: [[Int]] -> [Instruction] -> [Int]
+getAnswer guesses instructions = fst $ head $ filter (\(a,(_,_,_,z)) -> z == 0) $ map (\m -> (m, run instructions defaultRegister m)) guesses
 
 run :: [Instruction] -> Register -> [Int] -> Register
 run [] r _ = r
