@@ -30,11 +30,11 @@ defaultARegister = M.fromList [(X,I 0), (Y,I 0), (Z,I 0), (W,I 0)]
 main = do
     instructions <- getInput "input.txt"
     start <- getArgs
-    let maxMonad = (read (head start)) * 1000000000000 + 999936421899
+    let maxMonad =  99999936421899
     --print instructions
     let ci = chunkByInput instructions
-    --print <$> runChunk ci defaultRegister 9 []
-    print <$> findMaxMonad maxMonad instructions
+    print <$> runChunk ci defaultRegister (read (head start)) []
+    --print <$> findMaxMonad maxMonad instructions
 
 chunkByInput :: [Instruction] -> [[Instruction]]
 chunkByInput [] = []
@@ -51,7 +51,6 @@ findMaxMonad monad is
         when (drop 9 monadInts == [9,9,9,9,9]) $ print $ show monad ++ "\t" ++ show result
         findMaxMonad (monad - 1) is
     where
-        register = M.fromList [(X,0), (Y,0), (Z,0), (W,0)]
         monadInts = map C.digitToInt $ show monad
         (_,_,_,result) = run is defaultRegister monadInts
 
@@ -64,12 +63,11 @@ runChunk [] (_,_,_,z) _ e
 runChunk (i:is) r n e
     | n == 0 = return Nothing
     | otherwise = do
-        answer <- L.find isJust <$> mapM (\x -> runChunk is r' x (n:e)) tries
-        return $ fromMaybe Nothing answer
+        answer <- runChunk is r' 9 (n:e)
+        if isJust answer then return answer else runChunk (i:is) r (n-1) e
     where 
         r' = run i r [n]
         tries = [9,8,7,6,5,4,3,2,1]
-        
 
 run :: [Instruction] -> Register -> [Int] -> Register
 run [] r _ = r
